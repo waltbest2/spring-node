@@ -1,6 +1,6 @@
 {
-  "name": "spring-node",
-  "library": "spring-node",
+  "name": "spring-node-ts",
+  "library": "spring-node-ts",
   "version": "1.0.0",
   "description": "spring node ioc",
   "typings": "lib/index.js",
@@ -9,6 +9,10 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "mocha -r ts-node/register src/**/*.spec.ts --timeout 60000"
+  },
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/waltbest2/spring-node.git"
   },
   "author": "wuqi",
   "license": "MIT",
