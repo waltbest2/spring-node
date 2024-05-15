@@ -30,8 +30,9 @@ export class Wheel implements IWheel {
 ### 2.准备条件
 tsconfig.json 配置
 ```json
-"experimentalDecorators": true
-"emitDecoratorMetadata": true
+"experimentalDecorators": true,
+"emitDecoratorMetadata": true,
+"useDefineForClassFields": false
 ```
 
 ### 3.定义对外交互的接口，建议声明 interface 以及一个 symbol（可选，但是要有 symbol)
