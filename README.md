@@ -142,7 +142,7 @@ import { lazywired, component } from 'spring-node-ts/lib/ioc/decorator';
 @component(symbolI18nService)
 export class I18nService {
   @lazywired(symbolTranslateService)
-  private translate: TranslateService;
+  private declare translate: TranslateService;
 
   constructor() {}
 ```
@@ -166,3 +166,6 @@ import '../../test/ioc/context/Wheel';
 import'../../test/ioc/context/Audi';
 ```
 2. 依赖注入的类一般都是被自动new的，因此不允许自定义构造函数中带指定参数，否则没法知道依赖的参数是什么样。建议通过 set 设置
+
+3. 由于ES2022后，默认启用useDefineForClassFields，会导致注解设置属性失效，因此建议定义依赖注入属性时，添加declare声明，例如：private declare translate: TranslateService;
+   如果不想添加，则需要在tsconfig.json中设置useDefineForClassFields: false
