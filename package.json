@@ -1,7 +1,7 @@
 {
   "name": "spring-node-ts",
   "library": "spring-node-ts",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "spring node ioc",
   "typings": "lib/index.js",
   "main": "lib/index.js",

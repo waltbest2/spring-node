@@ -10,7 +10,7 @@ export const symbol = Symbol('HttpClientService');
 @component(symbol)
 export class HttpClientService {
   @autowired(validatorSymbol)
-  private validatorService: ValidatorService;
+  private declare validatorService: ValidatorService;
 ```
 
 ### 1.支持场景：
@@ -23,7 +23,7 @@ export class HttpClientService {
 @component(symbol)
 export class Wheel implements IWheel {
   @autowired(IMSymbol, IocScope.CONTEXT)
-  material: IMaterial;
+  declare material: IMaterial;
 }
 ```
 
@@ -35,7 +35,7 @@ tsconfig.json 配置
 "useDefineForClassFields": false
 ```
 
-### 3.定义对外交互的接口，建议声明 interface 以及一个 symbol（可选，但是要有 symbol)
+### 3.定义对外交互的接口，建议声明 interface 以及一个 symbol（可选，但是要有 symbol) symbol可以替换成class
 例如：
 ```ts
 export interface ICar {
@@ -49,7 +49,7 @@ export const symbol = Symbol('ICar');
 ```ts
 import { component } from 'spring-node-ts/lib/ioc/decorator';
 import { ICar, symbol as symICar } from './ICar';
-@component(symICar)
+@component(symICar) // 或者@component(Audi) 或者 @component()
 export class Audi implements ICar {
 }
 ```
@@ -64,7 +64,7 @@ import { autowired } from 'spring-node-ts/lib/ioc/decorator';
 import { ICar, symbol as symICar } from './ICar';
 export class Company {
   @autowired(symICar)/／不带第二个参数，默认表示单例
-  private car: ICar;
+  private declare car: ICar; // 建议加declare
 
   public run() {
     return this.car.drive();
@@ -99,25 +99,45 @@ export class Company {
   }
 }
 ```
+#### 5.3 源头类注入
+通过@component(xxx, true)，第二个参数设置为true，在该类定义时就创建好实例
+使用场景：非class场景（例如vue的组合式api的function里，或者ui层的setup里
+例如：
+``` ts
+@component(C, true)
+class C{
+  @autowired(C2)
+  private c2: C2;
 
-#### 5.3 懒注入lazywired：只在使用的时候注入
+  run() {
+    return 'hello C' + this.c2.run();
+  }
+}
+
+```
+vue组件里调用
+```ts
+import { inject } from 'spring-node-ts';
+const c: C = inject(C);
+c.run();
+```
+
+#### 5.4 懒注入lazywired：只在使用的时候注入
 例如想依赖注入angular原生service
 
 1. 新建angular的service
 ```ts
 import { Injectable } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { container } from 'spring-node-ts/lib/ioc/decorator';
+import { provide } from 'spring-node-ts';
 import { TranslateService } from '@ngx-translate/core';
-export const symbolTranslateService = Symbol('TranslateService');
-export const symbolActivatedRoute = Symbol('ActivatedRoute');
 @Injectable({
   providedIn: 'root',
 })
 export class IocAdapterService {
   constructor(private translate: TranslateService, private activatedRouter: ActivatedRoute) {
-  container.setInstance(symbolTranslateService, translate);
-  container.setInstance(symbolActivatedRoute, activatedRouter);
+  provide(TranslateService, translate);
+  provide(symbolActivaActivatedRoutetedRoute, activatedRouter);
 }
 ```
 将所有需要注入的 angular 单例 service都在这里声明symbol，并且注入到container中。
@@ -137,11 +157,10 @@ bootstrap: [AppComponent],
 
 3. 懒注入
 ```ts
-import { symbolTranslateService } from '../shared/services/ioc-adapter-service';
 import { lazywired, component } from 'spring-node-ts/lib/ioc/decorator';
-@component(symbolI18nService)
+@component(symbolI18nService) // 或者@component(I18nService) 或者 @component()
 export class I18nService {
-  @lazywired(symbolTranslateService)
+  @lazywired(TranslateService)
   private declare translate: TranslateService;
 
   constructor() {}
