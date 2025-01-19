@@ -9,8 +9,13 @@ export enum IocScope {
 export interface ToNew {
   object: any;
   propName: string;
-  interfaceName: Symbol;
+  interfaceName: InstanceToken;
 }
+
+/**
+ * 兼容class也可以作为唯一token，对标angular
+ */
+export type InstanceToken = Symbol | Function;
 
 /**
  * 依赖注入的全局容器
@@ -18,31 +23,31 @@ export interface ToNew {
  */
 export class IocContainer {
   // 依赖注入赋值回调
-  private depMaps = new Map<Symbol, Function[]>();
+  private depMaps = new Map<InstanceToken, Function[]>();
 
   // 准备去new的任务回调队列
   private toNewQueue: ToNew[] = [];
 
   // 保存所有的类定义
-  private classMap = new Map<Symbol, any>();
+  private classMap = new Map<InstanceToken, any>();
 
   // 保存单例的对象
-  private singletonMap = new Map<Symbol, any>();
+  private singletonMap = new Map<InstanceToken, any>();
 
-  public get(key: Symbol): any {
+  public get(key: InstanceToken): any {
     return this.classMap.get(key);
   }
 
-  public set(key: Symbol, $class: any): void {
+  public set(key: InstanceToken, $class: any): void {
     this.classMap.set(key, $class);
     this.trigger(key, $class);
   }
 
-  public setInstance(key: Symbol, instance: any): void {
+  public setInstance(key: InstanceToken, instance: any): void {
     this.singletonMap.set(key, instance);
   }
 
-  public getInstance(key: Symbol): any {
+  public getInstance(key: InstanceToken): any {
     return this.singletonMap.get(key);
   }
 
@@ -51,7 +56,7 @@ export class IocContainer {
    * @param key 
    * @param fn 
    */
-  public addDep(key: Symbol, fn: Function): void {
+  public addDep(key: InstanceToken, fn: Function): void {
     let deps = this.depMaps.get(key);
     if (!deps) {
       deps = [fn];
@@ -97,7 +102,7 @@ export class IocContainer {
    * @param key 
    * @param $class 
    */
-  private trigger(key: Symbol, $class: any): void {
+  private trigger(key: InstanceToken, $class: any): void {
     // 针对之前没有拿到具体类
     const deps = this.depMaps.get(key);
     while (deps?.length) {

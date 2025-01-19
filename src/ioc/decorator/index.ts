@@ -1,16 +1,26 @@
-import { IocContainer, IocScope } from '../container';
+import { IocContainer, IocScope, InstanceToken } from '../container';
 
 export const container = new IocContainer();
 
 /**
  * 多列对象定义，依赖注入不会创建单例，只有在注入的父类new时动态创建
- * @param interfaceName 该类对应的interface symbol标识，引用和提供唯一匹配，建议用symbol类型
+ * @param interfaceToken 该类对应的interface symbol标识，引用和提供唯一匹配，建议用symbol类型
+ * @param immediate 是否立即创建实例
  */
-export function component(interfaceName: Symbol) {
+export function component(interfaceToken?: InstanceToken, immediate: boolean = false): ClassDecorator {
   // 这里target是class本身，function类型
   return function(target) {
-    if (interfaceName) {
-      container.set(interfaceName, target);
+    let token = interfaceToken;
+    if (!token) {
+      token = target;
+    }
+    container.set(token, target);
+
+    if (immediate) {
+      const instance = container.getInstance(token);
+      if (!instance) {
+        container.setInstance(token, new (target as any)());
+      }
     }
 
     return target;
@@ -23,7 +33,7 @@ export function component(interfaceName: Symbol) {
  * @param type 
  * @returns 
  */
-export function autowired(interfaceName: Symbol, type = IocScope.SINGLETON) {
+export function autowired(interfaceName: InstanceToken, type = IocScope.SINGLETON): PropertyDecorator {
   // 这里target是class的prototype
   return function (target: any, propertyName: string) {
     // 记录当前父类的依赖，针对多例
@@ -58,7 +68,7 @@ export function autowired(interfaceName: Symbol, type = IocScope.SINGLETON) {
  * @param interfaceName 
  * @returns 
  */
-export function lazywired(interfaceName: Symbol) {
+export function lazywired(interfaceName: InstanceToken): PropertyDecorator {
   return function(target: any, propertyName: string) {
     Object.defineProperty(target, propertyName, {
       get() {
@@ -77,7 +87,7 @@ export function useContext(target: any) {
   container.addNewQueue(target);
 }
 
-function setProp(target: any, propName: string, $class: any, type: IocScope, interfaceName: Symbol) {
+function setProp(target: any, propName: string, $class: any, type: IocScope, interfaceName: InstanceToken) {
   if (type === IocScope.SINGLETON) {
     const instance = container.getInstance(interfaceName);
     if (instance) {
